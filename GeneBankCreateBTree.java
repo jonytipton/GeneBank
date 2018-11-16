@@ -9,7 +9,7 @@ public class GeneBankCreateBTree {
 	private static File file;
 	private static String sequenceLength;
 	private static String debugLevel;
-	private BTree bTree;
+	private BTree bTree;   
 	
 	/**
 	 * Main class that sets the arguments into variables
