@@ -4,16 +4,26 @@ public class GeneBankCreateBTree {
 	
 	private int degree;
 	private int cacheSize;
+	public boolean cacheInUse;
 	private File file;
 	private int sequenceLength;
 	private int debugLevel;
 	
 	public static void main(String [] args) {
 		if (args.length == 6) {
+			if(args[0].equals(1)) {
+				cacheInUse = true;
+			}
+			else {
+				cacheInUse = false;
+			}
+			degree = args[1];
+			file = new File(args[2]);
 			
-		}else if (args.length == 5 && args[1].equals(1)) {
 			
-		}else if (args.length == 5 && args[1].equals(0)) {
+		}else if (args.length == 5 && args[0].equals(1)) {
+			
+		}else if (args.length == 5 && args[0].equals(0)) {
 			
 		}else if (args.length < 5 || args.length > 6) {
 			System.out.println("Usage: java GeneBankCreateBTree" +
