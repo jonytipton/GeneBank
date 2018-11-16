@@ -54,5 +54,10 @@ public class BTree
 		{
 			return leaf;
 		}
+		
+		public boolean isFull()
+		{
+			return false;
+		}
 	}
 }
