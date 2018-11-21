@@ -1,43 +1,91 @@
+import java.util.LinkedList;
+
 public class BTree
 {
 	
+	private int degree;
+	private BTreeNode root;
 	
-
-
-	//n[x] = # of keys currently stored
-	//leaf[x] =  leaf node or nah
-	//keys are stored in accending order
-	//contains n[x]+1 children
-	private class BTreeNode<E>
+	public BTree(int degree)
 	{
-		public E key[];
-		public int numKeys;
-		boolean root;
-		boolean leaf;
-		boolean isFull;
-		public BTreeNode children[];
+		this.degree = degree;
 		
-		public BTreeNode(E key, int degree)
+		root = new BTreeNode();
+	}
+	
+	public void insert(long k)
+	{
+		BTreeNode r = this.root;
+		
+		int i = r.numKeys;
+		
+		if(r.isFull)
 		{
+			
+		}
+		
+	}
+	
+	public void insertFull()
+	{
+		
+	}
+	
+	public void splitChild()
+	{
+		
+	}
+	
+	public Long search(BTreeNode x, Long key)
+	{
+		return 
+	}
+	
+	public BTreeNode getRoot()
+	{
+		return root;
+	}
+	
+	private class BTreeNode
+	{
+		private LinkedList<Long> key;
+		private int numKeys;
+		private boolean root;
+		private boolean leaf;
+		private boolean isFull;
+		private LinkedList<BTreeNode> children;
+		private int degree;
+		private int parent;
+		private int level;
+		
+		public BTreeNode()
+		{	
+			children = new LinkedList<BTreeNode>();
+			key = new LinkedList<Long>();
 			leaf = true;
-			children = new BTreeNode[2 * (degree) - 1];
-		}
-		public BTreeNode(E key)
-		{
-			leaf = true;	
+			isFull = false;
+			parent = -1;
+			level = 0;
 		}
 
-		public E getKey()
+		public long getKey(long findKey)
 		{
-			for(int i = 0; i < key.length; i++)
-			{
-				return key[i];
-			}
+			return;
 		}
-
-		public void setKey(E key)
+		
+		public int getLevel()
 		{
-			this.key = key;
+			return level;
+		}
+		
+		public void setLevel(int newLevel)
+		{
+			this.level = newLevel;
+		}
+		
+		public void addKey(long newKey)
+		{
+			key.add(newKey);
 		}
 		
 		public int getNumKeys()
@@ -57,7 +105,37 @@ public class BTree
 		
 		public boolean isFull()
 		{
-			return false;
+			return isFull();
+		}
+		
+		public void setIsLeaf(boolean isLeaf)
+		{
+			this.leaf = isLeaf;
+		}
+		
+		public LinkedList<Long> getKey()
+		{
+			return key;
+		}
+		
+		public LinkedList<BTreeNode> getChildren()
+		{
+			return children;
+		}
+		
+		public void addChild(BTreeNode child)
+		{
+			children.add(child);
+		}
+		
+		public BTreeNode getChild(int index)
+		{
+			return children.get(index);
+		}
+		
+		public BTreeNode removeChild(int index)
+		{
+			return children.remove(index);
 		}
 	}
 }
