@@ -16,7 +16,7 @@ public class TreeObject implements Comparable<TreeObject>{
 	public void increaseFrequency(){
 		this.frequency++;
 	}
-	  
+	   
 	public int getFrequency(){
 		return frequency;
 	}
