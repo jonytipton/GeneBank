@@ -25,10 +25,14 @@ public class TreeObject implements Comparable<TreeObject>{
 		return data;
 	}
 	
+	public void setData(long data){
+		this.data = data;
+	}
+	
 	public int compareTo(TreeObject newItem){
-		if(this.data < newItem){
+		if(this.data < newItem.data){
 			return -1;
-		}else if(this.data > newItem){
+		}else if(this.data > newItem.data){
 			return 1;
 		}else
 			return 0;
