@@ -13,8 +13,10 @@ public class BTree{
 	private int insertionPoint;
 	private File file;
 	private RandomAccessFile RAF;
+	private BTreeCacheNode.BTreeCache cache;
+	private BTreeCacheNode BTCN;
 	
-	private class BTreeNode
+	class BTreeNode
 	{
 		private int parent;
 		private LinkedList<TreeObject> keys;
@@ -138,10 +140,10 @@ public class BTree{
 		insertionPoint = (BTreeOffset + nodeSize);
 		
 		if(useCache){
-			//cache stuff!
+			BTCN = new BTreeCacheNode(root, 0 , cacheSize);
+			cache = BTCN.BTC;
 		}
 		
-		//root = new BTreeNode();  You are probably correct in this code but to be safe
 		BTreeNode n = new BTreeNode();
 		root = n;
 		root.setOffset(BTreeOffset);
@@ -177,6 +179,8 @@ public class BTree{
 		root = readNode(BTreeOffset);
 	}
 	
+	public BTree() {super();}
+	
 
 	public BTreeNode getRoot(){
 		return root;
@@ -188,7 +192,7 @@ public class BTree{
 		
 		int i = r.getNumKeys();
 		
-		if(i == 2*degree-1){  //if r.isfull
+		if(i == 2*degree-1){ 
 			TreeObject o = new TreeObject(k);
 			while(i > 0 && o.compareTo(r.getKey(i-1)) < 0){
 				i--;
@@ -332,22 +336,82 @@ public class BTree{
 	}
 	
 	private void readTreeMetadata() {
-		// TODO Auto-generated method stub
-		
+		try{
+			RAF.seek(0);;
+			degree = RAF.readInt();
+			nodeSize = RAF.readInt();
+			BTreeOffset = RAF.readInt();
+		}catch(IOException e){
+			System.err.println("IO Exception occurred!");
+			System.exit(-1);
+		}
 	}
 	
 	private BTreeNode readNode(int bTreeOffset2) {
-		// TODO Auto-generated method stub
+		// cache
 		return null;
 	}
 	
 	private void writeNode(BTreeNode n, int offset) {
-		
+		if(cache != null){
+			BTreeNode cnode = cache.add(n,offset);
+			if(cnode != null) 
+				writeNodeToFile(cnode,cnode.getOffset());
+		}else{
+			writeNodeToFile(n,offset);
+		}
+	}
+	
+	//clear cache
+	
+	private void writeNodeToFile(BTreeNode n, int offset){
+		int i = 0;
+		try{
+			writeNodeMetadata(n,n.getOffset());
+			RAF.writeInt(n.getParent());
+			for(i = 0; i< 2*degree-1; i++){
+				if(i < n.getNumKeys() + 1 || n.isLeaf()){
+					RAF.writeInt(0);
+				}if(i < n.getNumKeys()){
+					long data = n.getKey(i).getData();
+					RAF.writeLong(data);
+					int freq = n.getKey(i).getFrequency();
+					RAF.writeInt(freq);
+				}else if(i >= n.getNumKeys() || n.isLeaf()){
+					RAF.writeLong(0);
+				}
+			}if(i == n.getNumKeys() && !n.isLeaf()){
+				RAF.writeInt(n.getChild(i));
+			}
+		}catch(IOException e){
+			System.err.println("IO Exception");
+			System.exit(-1);
+		}
 	}
 	 
 	//inOrderPrint
 	//inOrderPrintToWriter
 	
-
+	public String convert(long key){
+		String result = "";
+		if(key == -1){
+			return result;
+		}
+		String temp = "";
+		String altTemp = "";
+		altTemp = Long.toBinaryString(key);
+		for(int i = insertionPoint * 2; i > 1; i -= 2){
+			try{
+				temp = altTemp.substring(i -1, i + 1);
+				if(temp.equals("00")) result = result + "A";
+				else if (temp.equals("11")) result = result + "T";
+				else if (temp.equals("01")) result = result + "C";
+				else if (temp.equals("10")) result = result + "G";
+			}catch(StringIndexOutOfBoundsException e){
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
 	
 }
