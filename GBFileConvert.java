@@ -22,11 +22,11 @@ public class GBFileConvert {
 			}
 			if (sequence.charAt(i) == 't') { //11
 				if (i == 0) {
-					key = 1;
+					key = 3;
 				}
 				else {
 					key = key << 2; //shift left by 2
-					key = key | 1;
+					key = key | 3;
 					// key = key << 1;
 					// key + 1;
 					// key = key << 1;
@@ -35,11 +35,11 @@ public class GBFileConvert {
 			}
 			if (sequence.charAt(i) == 'c') { //01
 				if (i == 0) {
-					key = 2;
+					key = 1;
 				}
 				else {
 					key = key << 2; //shift left by 2
-					key = key | 2;
+					key = key | 1;
 					//key = key << 1;
 					//key + 0;
 					//key = key << 1;
@@ -48,11 +48,11 @@ public class GBFileConvert {
 			}
 			if (sequence.charAt(i) == 'g') { //10
 				if (i == 0) {
-					key = 3;
+					key = 2;
 				}
 				else {
 					key = key << 2; //shift left by 2
-					key = key | 3;
+					key = key | 2;
 					//key = key <<1;
 					//key = key + 1;
 					//key = key <<1; //fills with 0
