@@ -23,21 +23,12 @@ public class BTree{
 		private int offset;
 		private boolean isLeaf;
 		
-		//not sure if we need this vars
-		private boolean isFull;
-		private int degree;
-		private boolean root;
-		//private int level; offset may be better to use based on the write up
-		
 		public BTreeNode()
 		{	
 			children = new LinkedList<Integer>();
 			keys = new LinkedList<TreeObject>();
 			numKeys = 0;
 			parent = -1;
-			//not sure if we need these three below
-			isLeaf = true;
-			isFull = false;
 		}
 		
 		public int getParent(){
@@ -91,19 +82,9 @@ public class BTree{
 			this.numKeys = numKeys;
 		}
 		
-		public boolean isRoot()
-		{
-			return root;
-		}
-		
 		public boolean isLeaf()
 		{
 			return isLeaf;
-		}
-		
-		public boolean isFull()
-		{
-			return isFull();
 		}
 		
 		public void setIsLeaf(boolean isLeaf)
@@ -312,13 +293,42 @@ public class BTree{
 	
 	public TreeObject search(BTreeNode x, Long key)
 	{
-		return search(x, key);
+		int i = 0;
+		TreeObject o = new TreeObject(key);
+		while(i < x.getNumKeys() && (o.compareTo(x.getKey(i)) > 0)){
+			i++;
+		}if(i < x.getNumKeys() && o.compareTo(x.getKey(i)) == 0){
+			return x.getKey(i);
+		}if(x.isLeaf()){
+			return null;
+		}else{
+			int offset = x.getChild(i);
+			BTreeNode n = readNode(offset);
+			return search(n, key);
+		}
 	}
 	
+	public void writeTreeMetadata(){
+		try{
+			RAF.seek(0);//sets the pointer to the beginning of the file
+			RAF.writeInt(degree);
+			RAF.writeInt(32*degree-3);
+			RAF.writeInt(12);
+		}catch(IOException e){
+			System.err.println("IO Exception occurred!");
+			System.exit(-1);
+		}	
+	}
 	
-	private void writeTreeMetadata() {
-		// TODO Auto-generated method stub
-		
+	private void writeNodeMetadata(BTreeNode x, int offset) {
+		try{
+			RAF.seek(offset);
+			RAF.writeBoolean(x.isLeaf());
+			RAF.writeInt(x.getNumKeys());
+		}catch(IOException e){
+			System.err.println("IO Exception occurred!");
+			System.exit(-1);
+		}
 	}
 	
 	private void readTreeMetadata() {
@@ -331,10 +341,13 @@ public class BTree{
 		return null;
 	}
 	
-	private void writeNode(BTreeNode x, int offset) {
-		// TODO Auto-generated method stub
+	private void writeNode(BTreeNode n, int offset) {
 		
 	}
+	
+	//inOrderPrint
+	//inOrderPrintToWriter
+	
 
 	
 }
