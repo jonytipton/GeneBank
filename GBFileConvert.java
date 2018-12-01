@@ -18,19 +18,7 @@ public class GBFileConvert {
 				}
 				else {
 					key = key << 2; //shift left by 2, fill with 0
-				}
-			}
-			if (sequence.charAt(i) == 't') { //11
-				if (i == 0) {
-					key = 3;
-				}
-				else {
-					key = key << 2; //shift left by 2
-					key = key | 3;
-					// key = key << 1;
-					// key + 1;
-					// key = key << 1;
-					// key + 1;
+					key = key | 0;
 				}
 			}
 			if (sequence.charAt(i) == 'c') { //01
@@ -40,10 +28,6 @@ public class GBFileConvert {
 				else {
 					key = key << 2; //shift left by 2
 					key = key | 1;
-					//key = key << 1;
-					//key + 0;
-					//key = key << 1;
-					//key + 1;
 				}
 			}
 			if (sequence.charAt(i) == 'g') { //10
@@ -53,9 +37,15 @@ public class GBFileConvert {
 				else {
 					key = key << 2; //shift left by 2
 					key = key | 2;
-					//key = key <<1;
-					//key = key + 1;
-					//key = key <<1; //fills with 0
+				}
+			}
+			if (sequence.charAt(i) == 't') { //11
+				if (i == 0) {
+					key = 3;
+				}
+				else {
+					key = key << 2; //shift left by 2
+					key = key | 3;
 				}
 			}
 		}
@@ -74,17 +64,17 @@ public class GBFileConvert {
 			temp = temp >> (length - i) * 2;
 				
 			//compare 
-			if (temp == 00) { 
+			if (temp == 0L) { 
 				textSequence += 'a';
 			}
-			else if (temp == 11) {
-				textSequence += 't';
-			}
-			else if (temp == 01) {
+			else if (temp == 1L) {
 				textSequence += 'c';
 			}
-			else if (temp == 10) {
+			else if (temp == 2L) {
 				textSequence += 'g';
+			}
+			else if (temp == 3L) {
+				textSequence += 't';
 			}
 		}
 		return textSequence;

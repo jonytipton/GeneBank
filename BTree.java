@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
@@ -347,9 +348,47 @@ public class BTree{
 		}
 	}
 	
-	private BTreeNode readNode(int bTreeOffset2) {
-		// cache
-		return null;
+	private BTreeNode readNode(int offset) {
+		BTreeNode y = null;
+		//if node is cached we can read it from there
+		if(cache != null){
+			y = cache.readNode(offset);
+		}if (y != null){
+			return y;
+		}
+		y = new BTreeNode();
+		TreeObject o = null;
+		y.setOffset(offset);
+		int j = 0;
+		try{
+			RAF.seek(offset);
+			boolean isLeaf = RAF.readBoolean();
+			y.setIsLeaf(isLeaf);
+			int n = RAF.readInt();
+			y.setNumKeys(n);
+			int parent = RAF.readInt();
+			y.setParent(parent);
+			for(j = 0; j < 2 *degree-1; j++){
+				if(j < y.getNumKeys() + 1 && !y.isLeaf()){
+					int child = RAF.readInt();
+					y.addChild(child);
+				}else if(j >= y.getNumKeys() + 1 || y.isLeaf()){
+					RAF.seek(RAF.getFilePointer() + 4);
+				}if(j < y.getNumKeys()){
+					long value = RAF.readLong();
+					int frequency = RAF.readInt();
+					o = new TreeObject(value, frequency);
+					y.addKey(o);
+				}
+			}if(j == y.getNumKeys() && !y.isLeaf()){
+				int child = RAF.readInt();
+				y.addChild(child);
+			}
+		}catch(IOException e){
+			System.err.println(e.getMessage());
+			System.exit(-1);
+		}
+		return y;
 	}
 	
 	private void writeNode(BTreeNode n, int offset) {
@@ -362,7 +401,13 @@ public class BTree{
 		}
 	}
 	
-	//clear cache
+	public void flushCache(){
+		if(cache != null){
+			for(BTreeNode cnode : cache){
+				writeNodeToFile(cnode, cnode.getOffset());
+			}
+		}
+	}
 	
 	private void writeNodeToFile(BTreeNode n, int offset){
 		int i = 0;
@@ -389,8 +434,42 @@ public class BTree{
 		}
 	}
 	 
-	//inOrderPrint
-	//inOrderPrintToWriter
+	public void inOrderPrint(BTreeNode node){
+		System.out.println(node);
+		if(node.isLeaf() == true){
+			for(int i = 0; i < node.getNumKeys(); i++){
+				System.out.println(node.getKey(i));
+			}
+			return;
+		}
+		
+		for(int i = 0; i < node.getNumKeys(); i++){
+			int offset = node.getChild(i);
+			BTreeNode y = readNode(offset);
+			inOrderPrint(y);
+			if(i < node.getNumKeys()){
+				System.out.println(node.getKey(i));
+			}
+		}
+	}
+	
+	public void inOrderPrintToWriter(BTreeNode node, PrintWriter pwriter, int sequenceLength) throws IOException{
+		GBFileConvert gbc = new GBFileConvert();
+		for( int i = 0; i < node.getNumKeys(); i++){
+			pwriter.println(node.getKey(i).getFrequency() + " ");
+			pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
+		}if(!node.isLeaf()){
+			for(int i = 0; i < node.getNumKeys() + 1; ++i){
+				int offset = node.getChild(i);
+				BTreeNode n = readNode(offset);
+				inOrderPrintToWriter(n,pwriter,sequenceLength);
+				if(i < node.getNumKeys()){
+					pwriter.print(node.getKey(i).getFrequency() + " ");
+					pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
+				}
+			}
+		}
+	}
 	
 	public String convert(long key){
 		String result = "";
