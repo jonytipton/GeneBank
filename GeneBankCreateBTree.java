@@ -17,7 +17,7 @@ public class GeneBankCreateBTree {
 	private static int debugLevel;
 	private static BufferedReader reader;
 	private static PrintWriter dump;
-	private BTree bTree;
+	private static BTree bTree;
 	
 	/**
 	 * Main class that sets the arguments into variables
@@ -40,7 +40,7 @@ public class GeneBankCreateBTree {
 			//Use of optimal degree or not
 			int d = Integer.parseInt(args[1]);
 			if(d == 0) {
-				//TO DO: bTree.getOptimalDegree
+				//TO DO: optimalDegree
 			}else {
 				degree = d;
 			}
@@ -82,12 +82,50 @@ public class GeneBankCreateBTree {
 			}catch(FileNotFoundException e) {
 				System.err.println("File not found: " + gbk.getPath());
 			}
-			
 			 
 		}catch(NumberFormatException e){
 			brokenArguments();
 		}
+		bTree = new BTree(degree, gbk, cacheInUse, cacheSize);
+		//Parser???
+		String line = null;
+		line = reader.readLine().toLowerCase().trim();
+		boolean inSequence = false;
+		int sequencePosition = 0;
+		int charPosition = 0;
+		long sequence = 0L;
 		
+		while(line != null) {
+			if(inSequence) {
+				if(line.startsWith("//")) {
+					inSequence = false;
+					sequence = 0;
+					sequencePosition = 0;
+				}else {
+					while(charPosition < line.length()) {
+						char c = line.charAt(charPosition++);
+						//Possible case switch for the different letters
+						
+						if(sequencePosition >= sequenceLength) {
+							bTree.insert(sequence);
+						}
+					}
+				}
+				}else if(line.startsWith("ORIGIN")) {
+					inSequence = true;
+				}
+			line = reader.readLine();
+			charPosition = 0;
+			}
+		
+		if(debugLevel > 0) {
+			File dumpFile = new File("dump");
+		}
+		}
+		
+	
+	public int optimalDegree() {
+		return 0;
 	}
 	
 	/**
