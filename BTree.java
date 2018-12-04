@@ -5,6 +5,10 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
+/**
+ * class contains the BTreeNode structure
+ */
+
 public class BTree{
 
 	private int degree;
@@ -16,7 +20,11 @@ public class BTree{
 	private RandomAccessFile RAF;
 	private BTreeCacheNode.BTreeCache cache;
 	private BTreeCacheNode BTCN;
+	private Cache MattCache;
 	
+	/**
+     * SubClass that contains constructor for BTreeNode
+     */
 	class BTreeNode
 	{
 		private int parent;
@@ -133,7 +141,14 @@ public class BTree{
 			return s;
 		}
 	}
-	 
+	
+	/*
+     * BTree constrcutor
+     * @params deg degree of the tree
+     * @params FileName simple filename
+     * @params useCache boolean value whether using cache or not
+     * @params cacheSize how large the cache implementation should be
+     */
 	public BTree(int deg, String FileName, boolean useCache, int cacheSize){
 		nodeSize = (32* deg - 3);
 		this.degree = deg;
@@ -143,6 +158,8 @@ public class BTree{
 		if(useCache){
 			BTCN = new BTreeCacheNode(root, 0 , cacheSize);
 			cache = BTCN.BTC;
+			//MattCache = new Cache(cachesize); 
+			
 		}
 		
 		BTreeNode n = new BTreeNode();
@@ -167,8 +184,12 @@ public class BTree{
 		writeTreeMetadata();
 	}
 
-
-	public BTree(int degree, File filename, boolean useCache, int cacheSize){
+	 /**
+     * Instantiates a BTree
+     *
+     * @param fileName filename that should be used
+     */
+	public BTree(File filename){
 		try{
 			RAF = new RandomAccessFile(filename, "r"); 
 		}
@@ -182,12 +203,21 @@ public class BTree{
 	
 	public BTree() {super();}
 	
-
+	/**
+     * Finds and returns root of the BTreeNode
+     *
+     * @return root of tree
+     */
 	public BTreeNode getRoot(){
 		return root;
 	}
 	
-	public void insert(long k)
+	/**
+     * Inserts into the BTree
+     *
+     * @param k to be inserted
+     */ 
+	 void insert(long k)
 	{
 		BTreeNode r = this.root;
 		
@@ -214,8 +244,14 @@ public class BTree{
 			insertNotFull(r,k);
 		
 	}
-	
-	public void insertNotFull(BTreeNode x, long key){
+
+	 /**
+	  * Inserts into the BTree ensuring the btree is not full
+	  *
+	  * @param key     to be inserted
+	  * @param x the BTreeNode to be inserted
+	  */
+	 public void insertNotFull(BTreeNode x, long key){
 		int i = x.getNumKeys();
 		TreeObject o = new TreeObject(key);
 		if(x.isLeaf()){
@@ -261,7 +297,13 @@ public class BTree{
 		}
 	}
 	
-
+	 /**
+	  * Splits child node
+	  *
+	  * @param x the btree Node to be split
+	  * @param y       the node that will be split
+	  * @param i       the degree index
+	  */
 	public void splitChild(BTreeNode x, int i, BTreeNode y){
 		BTreeNode z = new BTreeNode();
 		z.setIsLeaf(y.isLeaf());
@@ -296,6 +338,12 @@ public class BTree{
 		}
 	}
 	
+	/**
+     * Search the BTree
+     *
+     * @param key     to be inserted
+     * @param x		 the node to be found
+     */
 	public TreeObject search(BTreeNode x, Long key)
 	{
 		int i = 0;
@@ -313,6 +361,9 @@ public class BTree{
 		}
 	}
 	
+	/**
+     * Writes the metadata of the tree, including the degree ect.
+     */
 	public void writeTreeMetadata(){
 		try{
 			RAF.seek(0);//sets the pointer to the beginning of the file
@@ -324,7 +375,11 @@ public class BTree{
 			System.exit(-1);
 		}	
 	}
-	
+	/**
+     * Writes the Node to the metadata, using the offset
+     * @param x		the Node being written to metadata
+     * @param offset	the offset of the node
+     */
 	private void writeNodeMetadata(BTreeNode x, int offset) {
 		try{
 			RAF.seek(offset);
@@ -336,6 +391,9 @@ public class BTree{
 		}
 	}
 	
+	 /**
+     * Reads the meta data from file
+     */
 	private void readTreeMetadata() {
 		try{
 			RAF.seek(0);;
@@ -348,6 +406,11 @@ public class BTree{
 		}
 	}
 	
+
+    /** Reads a cached node
+    *
+    * @param offset of the nodes
+    */
 	private BTreeNode readNode(int offset) {
 		BTreeNode y = null;
 		//if node is cached we can read it from there
@@ -391,6 +454,11 @@ public class BTree{
 		return y;
 	}
 	
+	/**
+     * Writes a node pushed off the cache
+     *
+     * @param n the node toe be written
+     */
 	private void writeNode(BTreeNode n, int offset) {
 		if(cache != null){
 			BTreeNode cnode = cache.add(n,offset);
@@ -401,6 +469,9 @@ public class BTree{
 		}
 	}
 	
+	/**
+     * cache clearing
+     */
 	public void flushCache(){
 		if(cache != null){
 			for(BTreeNode cnode : cache){
@@ -409,6 +480,12 @@ public class BTree{
 		}
 	}
 	
+	/**
+     * Writes a node pushed off the cache
+     *
+     * @param n 	the node to be written
+     * @param offest the offset of the node 
+     */
 	private void writeNodeToFile(BTreeNode n, int offset){
 		int i = 0;
 		try{
@@ -453,6 +530,13 @@ public class BTree{
 		}
 	}
 	
+	/**
+     * Prints to file, instantiating a printWriter
+     *
+     * @param node           the node to be printed
+     * @param pwriter         the setup instantiation of PrintWriter
+     * @param sequenceLength how long each DNA sequence should be
+     */
 	public void inOrderPrintToWriter(BTreeNode node, PrintWriter pwriter, int sequenceLength) throws IOException{
 		GBFileConvert gbc = new GBFileConvert();
 		for( int i = 0; i < node.getNumKeys(); i++){
