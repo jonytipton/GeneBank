@@ -18,6 +18,10 @@ public class GeneBankCreateBTree {
 	private static BufferedReader reader;
 	private static PrintWriter dump;
 	private static BTree bTree;
+	private static final long CODE_A = 0L;
+	private static final long CODE_G = 2L;
+	private static final long CODE_C = 1L;
+	private static final long CODE_T = 3L;
 	
 	/**
 	 * Main class that sets the arguments into variables
@@ -40,7 +44,7 @@ public class GeneBankCreateBTree {
 			//Use of optimal degree or not
 			int d = Integer.parseInt(args[1]);
 			if(d == 0) {
-				//TO DO: optimalDegree
+				optimalDegree();
 			}else {
 				degree = d;
 			}
@@ -86,46 +90,103 @@ public class GeneBankCreateBTree {
 		}catch(NumberFormatException e){
 			brokenArguments();
 		}
-		bTree = new BTree(degree, gbk, cacheInUse, cacheSize);
-		//Parser???
+		String BTreeFile = (gbk + ".btree.data." + sequenceLength + "." + degree);
+		bTree = new BTree(degree, BTreeFile, cacheInUse, cacheSize);
+		//TO DO: Initialize new cache
 		String line = null;
 		line = reader.readLine().toLowerCase().trim();
 		boolean inSequence = false;
 		int sequencePosition = 0;
 		int charPosition = 0;
 		long sequence = 0L;
-		
-		while(line != null) {
-			if(inSequence) {
-				if(line.startsWith("//")) {
-					inSequence = false;
-					sequence = 0;
-					sequencePosition = 0;
-				}else {
-					while(charPosition < line.length()) {
-						char c = line.charAt(charPosition++);
-						//Possible case switch for the different letters
-						
-						if(sequencePosition >= sequenceLength) {
-							bTree.insert(sequence);
+			while(line != null) {
+				if(inSequence) {
+					if(line.startsWith("//")) {
+						inSequence = false;
+						sequence = 0;
+						sequencePosition = 0;
+					}else {
+						while(charPosition < line.length()) {
+							//Convert to long???
+							char c = line.charAt(charPosition++);
+							switch(c) {
+								case 'a':
+									sequence = (CODE_A);
+									if(sequencePosition < sequenceLength) {
+										sequencePosition++;
+									}
+									break;
+								case 'g':
+									sequence = (CODE_G);
+									if(sequencePosition < sequenceLength) {
+										sequencePosition++;
+									}
+									break;
+								case 'c':
+									sequence = (CODE_C);
+									if(sequencePosition < sequenceLength) {
+										sequencePosition++;
+									}
+									break;
+								case 't':
+									sequence = (CODE_T);
+									if(sequencePosition < sequenceLength) {
+										sequencePosition++;
+									}
+									break;
+								case 'n':
+									sequencePosition = 0;
+									sequence = 0;
+									continue;
+								default:
+									continue;
+							}
+							if(sequencePosition >= sequenceLength && !cacheInUse) {
+								bTree.insert(sequence);
+							}
 						}
 					}
+					}else if(line.startsWith("ORIGIN")) {
+						inSequence = true;
+					}
+				line = reader.readLine();
+				charPosition = 0;
 				}
-				}else if(line.startsWith("ORIGIN")) {
-					inSequence = true;
-				}
-			line = reader.readLine();
-			charPosition = 0;
+		
+			if(debugLevel > 0) {
+				String dump;
+				dump = gbk + ".btree.data.dump." + sequenceLength;
+				File dumpFile = new File(dump);
+				dumpFile.delete();
+				dumpFile.createNewFile();
+				PrintWriter writer = new PrintWriter(dumpFile);
+				bTree.inOrderPrint(bTree.getRoot());
+				writer.close();
+			}else{
+				//TO DO: Print error messages
 			}
+			if(cacheInUse) {
+				bTree.flushCache();
+			}
+			reader.close();
 		
-		if(debugLevel > 0) {
-			File dumpFile = new File("dump");
-		}
-		}
+	}
 		
-	
-	public int optimalDegree() {
-		return 0;
+	/**
+	 * Optimal degree is found by using a formula given in 
+	 * PowerPoint 15-B-Trees.pptx slide 14. The formula uses
+	 * variables for a disk block size of 4096 bytes.
+	 * Each node has a 200 bytes of meta-data to store.
+	 * The size of each key is 120 bytes.
+	 * Each pointer has size 8 bytes.
+	 * Optimal degree (m) is found using this formula:
+	 * "4096 = 200 + 8 + 120*(m-1) + 8 * (m)"
+	 * m came out to be 30.
+	 * @return optimal degree
+	 */
+	public static int optimalDegree() {
+		int optimalDegree = 30;
+		return optimalDegree;
 	}
 	
 	/**
