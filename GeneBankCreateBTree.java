@@ -168,8 +168,7 @@ public class GeneBankCreateBTree {
 			if(cacheInUse) {
 				bTree.flushCache();
 			}
-			reader.close();
-		
+			reader.close();	
 	}
 		
 	/**
