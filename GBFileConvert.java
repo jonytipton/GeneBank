@@ -1,4 +1,6 @@
-
+/**
+ * Converts Long and Strings
+ */
 public class GBFileConvert {
 	private long key = 0;
 	
@@ -8,6 +10,13 @@ public class GBFileConvert {
 	
 	//64 bit
 	//Not sure if the key | "value" code returns expected result
+	/**
+     * Converts a string type into a long, character by character a, c, g, t it
+     * converts to binary representation.
+     *
+     * @param sequence substring of the dna sequence to convert into a long
+     * @return key which is a long type
+     */
 	public long convertToLong(String sequence) {
 		sequence = sequence.toLowerCase();
 		
@@ -53,6 +62,12 @@ public class GBFileConvert {
 	}
 	
 	//31 length sequence
+	/**
+     * Converts a long type into a String type
+     *
+     * @param sequence    the long type to be converted
+     * @param length the length of each DNA sequence between splits
+     */
 	public String convertToString(long sequence, int length) {
 		String textSequence = "";
 		long temp = 0;

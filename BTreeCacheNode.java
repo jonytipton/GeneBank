@@ -1,6 +1,9 @@
 import java.util.Iterator;
 import java.util.LinkedList;
 
+/**
+ * Creates BTreeCache node and maintains it through methods.
+ */
 
 public class BTreeCacheNode extends BTree{
 	private BTreeNode data;

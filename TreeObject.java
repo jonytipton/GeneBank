@@ -1,3 +1,6 @@
+/**
+ * Represents the Tree objects
+*/
 public class TreeObject implements Comparable<TreeObject>{
 	
 	private int frequency;
