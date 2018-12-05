@@ -1,4 +1,4 @@
-CS321 Data Structures: lab4
+CS321 Data Structures: program 4
 Bioinformatics
 # GeneBank
 
