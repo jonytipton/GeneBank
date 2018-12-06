@@ -1,4 +1,4 @@
-CS321 Data Structures: program 4
+CS321 Data Structures: Program 4
 Bioinformatics
 # GeneBank
 
@@ -6,12 +6,12 @@ Authors: Samantha Maxey, Matt Merris, Bridgette Milgie, Aubrey Spannagel, Jonath
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Files:
 Btree.java: An implementation of a BTree for GeneBanks.
-inner class (BTreeNode): A Node class used by the BTree.
+Inner Class (BTreeNode): A Node class used by the BTree.
 
 TreeObject.java: Object class used by BTree.java.
 
 BTreeCacheNode.java: Cache for BTreeNode.
-inner class (BTreeCache): Cache for BTree.
+Inner Class (BTreeCache): Cache for BTree.
 
 GBFileConvert.java: Class to represent Gene Sequences (converts from String to binary long).
 
