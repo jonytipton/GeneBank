@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class GeneBankCreateBTree {
-	
+
 	private static int degree;
 	private static int cacheSize;
 	public static boolean cacheInUse;
 	private static File gbk;
+	private static String gbkFilename;
 	private static int sequenceLength;
 	private static int debugLevel;
 	private static BufferedReader reader;
@@ -22,7 +23,7 @@ public class GeneBankCreateBTree {
 	private static final long CODE_G = 2L;
 	private static final long CODE_C = 1L;
 	private static final long CODE_T = 3L;
-	
+
 	/**
 	 * Main class that sets the arguments into variables
 	 */
@@ -40,21 +41,21 @@ public class GeneBankCreateBTree {
 			if (cache == 1) {
 				cacheInUse = true;
 			}
-			
+
 			//Use of optimal degree or not
 			int d = Integer.parseInt(args[1]);
 			if(d == 0) {
-				optimalDegree();
+				degree = optimalDegree();
 			}else {
 				degree = d;
 			}
-			
-			//Set file
+
+			//Set file and store GeneBank filename
 			File gbk = new File(args[2]);
-			
+			gbkFilename = args[2];
 			//Set sequence length
 			sequenceLength = Integer.parseInt(args[3]);
-			
+
 			if(args.length > 4) {
 				if(cacheInUse) {
 					try {
@@ -62,7 +63,7 @@ public class GeneBankCreateBTree {
 						if(cacheSize < 1) {
 							brokenArguments();
 						}
-						
+
 					}catch(NumberFormatException e){
 						brokenArguments();
 					}
@@ -78,7 +79,7 @@ public class GeneBankCreateBTree {
 					}
 				}
 			}
-			
+
 			//Set up BufferedReader
 			reader = null;
 			try {
@@ -86,11 +87,11 @@ public class GeneBankCreateBTree {
 			}catch(FileNotFoundException e) {
 				System.err.println("File not found: " + gbk.getPath());
 			}
-			 
+
 		}catch(NumberFormatException e){
 			brokenArguments();
 		}
-		String BTreeFile = (gbk + ".btree.data." + sequenceLength + "." + degree);
+		String BTreeFile = (gbkFilename + ".btree.data." + sequenceLength + "." + degree);
 		bTree = new BTree(degree, BTreeFile, cacheInUse, cacheSize);
 		//TO DO: Initialize new cache
 		String line = null;
