@@ -19,15 +19,15 @@ public class GeneBankCreateBTree {
 	private static BufferedReader reader;
 	private static PrintWriter dump;
 	private static BTree bTree;
-	private static final long CODE_A = 0L;
-	private static final long CODE_G = 2L;
-	private static final long CODE_C = 1L;
-	private static final long CODE_T = 3L;
+//	private static final long CODE_A = 0L;
+//	private static final long CODE_G = 2L;
+//	private static final long CODE_C = 1L;
+//	private static final long CODE_T = 3L;
 	//these may need to be at play instead of the Longs above
-	//public static final long CODE_A = 0b00L;
-	//public static final long CODE_T = 0b11L;
-	//public static final long CODE_C = 0b01L;
-	//public static final long CODE_G = 0b10L;
+	public static final long CODE_A = 0b00L;
+	public static final long CODE_T = 0b11L;
+	public static final long CODE_C = 0b01L;
+	public static final long CODE_G = 0b10L;
 
 	/**
 	 * Main class that sets the arguments into variables
