@@ -111,7 +111,7 @@ public class GeneBankSearch {
 			scan.close();
 		} catch (Exception e) { //catch file not found
 			e.printStackTrace();
-		}
+		}   
 	}
 	
 	/*
