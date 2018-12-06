@@ -166,6 +166,8 @@ public class GeneBankCreateBTree {
 			}else{
 				//TO DO: Print error messages
 			}
+			System.out.println("done");
+			
 			if(cacheInUse) {
 				bTree.flushCache();   
 			}
