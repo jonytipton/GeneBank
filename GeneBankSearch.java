@@ -105,7 +105,7 @@ public class GeneBankSearch {
 				TreeObject tObject = bTree.search(bTree.getRoot(), convertedSearch);
 				
 				if (tObject != null) {
-					System.out.println(convertToString(tObject.getData(), sequence) + ": " + tObject.getFrequencey());
+					System.out.println(convertToString(tObject.getData(), sequence) + ": " + tObject.getFrequency());
 				}
 			}
 			scan.close();
@@ -195,7 +195,7 @@ public class GeneBankSearch {
 	     * @param sequence    the long type to be converted
 	     * @param length the length of each DNA sequence between splits
 	     */
-		public String convertToString(long sequence, int length) {
+		public static String convertToString(long sequence, int length) {
 			String textSequence = "";
 			long temp = 0;
 			
