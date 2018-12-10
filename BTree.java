@@ -1,7 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-//import java.io.PrintWriter;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
 
@@ -530,30 +530,30 @@ public class BTree{
 		}
 	}
 
-	//	/**
-	//     * Prints to file, instantiating a printWriter
-	//     *
-	//     * @param node           the node to be printed
-	//     * @param pwriter         the setup instantiation of PrintWriter
-	//     * @param sequenceLength how long each DNA sequence should be
-	//     */
-	//	public void inOrderPrintToWriter(BTreeNode node, PrintWriter pwriter, int sequenceLength) throws IOException{
-	//		GBFileConvert gbc = new GBFileConvert();
-	//		for( int i = 0; i < node.getNumKeys(); i++){
-	//			pwriter.println(node.getKey(i).getFrequency() + " ");
-	//			pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
-	//		}if(!node.isLeaf()){
-	//			for(int i = 0; i < node.getNumKeys() + 1; ++i){
-	//				int offset = node.getChild(i);
-	//				BTreeNode n = readNode(offset);
-	//				inOrderPrintToWriter(n,pwriter,sequenceLength);
-	//				if(i < node.getNumKeys()){
-	//					pwriter.print(node.getKey(i).getFrequency() + " ");
-	//					pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
-	//				}
-	//			}
-	//		}
-	//	}
+		/**
+	     * Prints to file, instantiating a printWriter
+	     *
+	     * @param node           the node to be printed
+	     * @param pwriter         the setup instantiation of PrintWriter
+	     * @param sequenceLength how long each DNA sequence should be
+	     */
+		public void inOrderPrintToWriter(BTreeNode node, PrintWriter pwriter, int sequenceLength) throws IOException{
+			GBFileConvert gbc = new GBFileConvert();
+			for( int i = 0; i < node.getNumKeys(); i++){
+				pwriter.println(node.getKey(i).getFrequency() + " ");
+				pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
+			}if(!node.isLeaf()){
+				for(int i = 0; i < node.getNumKeys() + 1; ++i){
+					int offset = node.getChild(i);
+					BTreeNode n = readNode(offset);
+					inOrderPrintToWriter(n,pwriter,sequenceLength);
+					if(i < node.getNumKeys()){
+						pwriter.print(node.getKey(i).getFrequency() + " ");
+						pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
+					}
+				}
+			}
+		}
 
 	public String convert(long key){
 		String result = "";
