@@ -1,65 +1,48 @@
-//GIT
-
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+//import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Scanner;
+
 
 public class GeneBankCreateBTree {
-
-	private static int degree;
-	private static int cacheSize;
-	public static boolean cacheInUse;
-	private static File gbk;
-	private static String gbkFilename;
-	private static int sequenceLength;
-	private static int debugLevel;
-	private static BufferedReader reader;
-	private static PrintWriter dump;
-	private static BTree bTree;
-//	private static final long CODE_A = 0L;
-//	private static final long CODE_G = 2L;
-//	private static final long CODE_C = 1L;
-//	private static final long CODE_T = 3L;
-	//these may need to be at play instead of the Longs above
-	public static final long CODE_A = 0b00L;
-	public static final long CODE_T = 0b11L;
-	public static final long CODE_C = 0b01L;
-	public static final long CODE_G = 0b10L;
-
-	/**
-	 * Main class that sets the arguments into variables
-	 */
+	private static int t;					// degree of the btree to create
+	private static int cacheSize;			// size of cache, if using
+	public static boolean cacheInUse;		// indicates if using a cache to build the tree
+	private static File gbk;				// do we need this static??
+	private static String gbkFilename;		// string to capture .gbk filename used to build tree
+	private static int k;					// subsequence length used to build the tree
+	private static int debugLevel;			// indicates level of debug specified
+	//private static BufferedReader reader;	// ****** is this necessary?
+	//private static PrintWriter dump;		// ****** is this necessary?
+	private static BTree bTree;				// does it make sense to make this a private static
+	
 	public static void main(String [] args) throws IOException{
 		if(args.length < 4) {
 			brokenArguments();
 		}
-		cacheInUse = false;
 		try {
 			//Determine if cache is in use
+			boolean cacheInUse = false;
 			int cache = Integer.parseInt(args[0]);
-			if (cache == 0) {
-				cacheInUse = false;
-			}
 			if (cache == 1) {
 				cacheInUse = true;
 			}
+			else {
+				cacheSize = 0;
+			}
 
 			//Use of optimal degree or not
-			int d = Integer.parseInt(args[1]);
-			if(d == 0) {
-				degree = optimalDegree();
-			}else {
-				degree = d;
+			t = Integer.parseInt(args[1]);
+			if(t == 0) {
+				t = optimalDegree();
 			}
 
 			//Set file and store GeneBank filename
-			File gbk = new File(args[2]);
+			gbk = new File(args[2]);
 			gbkFilename = args[2];
 			//Set sequence length
-			sequenceLength = Integer.parseInt(args[3]);
+			k = Integer.parseInt(args[3]);
 
 			if(args.length > 4) {
 				if(cacheInUse) {
@@ -84,118 +67,85 @@ public class GeneBankCreateBTree {
 					}
 				}
 			}
-
-			//Set up BufferedReader
-			reader = null;
-			try {
-				reader = new BufferedReader(new FileReader(gbk));
-			}catch(FileNotFoundException e) {
-				System.err.println("File not found: " + gbk.getPath());
-			}
-
 		}catch(NumberFormatException e){
 			brokenArguments();
 		}
-		String BTreeFile = (gbkFilename + ".btree.data." + sequenceLength + "." + degree);
-		bTree = new BTree(degree, BTreeFile, cacheInUse, cacheSize);
-		//TO DO: Initialize new cache
-		String line = null;
-		line = reader.readLine().toLowerCase().trim();
-		boolean inSequence = false;
-		int sequencePosition = 0;
-		int charPosition = 0;
-		long sequence = 0L;
-			while(line != null) {
-				if(inSequence) {
-					if(line.startsWith("//")) {
-						inSequence = false;
-						sequence = 0;
-						sequencePosition = 0;
-					}else {
-						while(charPosition < line.length()) {
-							//Convert to long???
-							char c = line.charAt(charPosition++);
-							switch(c) {
-								case 'a':
-									sequence = (CODE_A);
-									if(sequencePosition < sequenceLength) {
-										sequencePosition++;
-									}
-									break;
-								case 'g':
-									sequence = (CODE_G);
-									if(sequencePosition < sequenceLength) {
-										sequencePosition++;
-									}
-									break;
-								case 'c':
-									sequence = (CODE_C);
-									if(sequencePosition < sequenceLength) {
-										sequencePosition++;
-									}
-									break;
-								case 't':
-									sequence = (CODE_T);
-									if(sequencePosition < sequenceLength) {
-										sequencePosition++;
-									}
-									break;
-								case 'n':
-									sequencePosition = 0;
-									sequence = 0;
-									continue;
-								default:
-									continue;
-							}
-							if(sequencePosition >= sequenceLength && !cacheInUse) {
-								bTree.insert(sequence);
-							}
-						}
-					}
-					}else if(line.startsWith("ORIGIN")) {
-						inSequence = true;
-					}
-				line = reader.readLine();
-				charPosition = 0;
-				}
+		// args are set up, scanner to .gbk file is primed and ready for action
+		// btree set up stuff
+		String BTreeFile = (gbkFilename + ".btree.data." + k + "." + t);
+		bTree = new BTree(t, BTreeFile, cacheInUse, cacheSize);
 		
-			if(debugLevel > 0) {
-				String dump;
-				dump = gbk + ".btree.data.dump." + sequenceLength;
-				File dumpFile = new File(dump);
-				dumpFile.delete();
-				dumpFile.createNewFile();
-				PrintWriter writer = new PrintWriter(dumpFile);
-				bTree.inOrderPrint(bTree.getRoot());
-				writer.close();
-			}else{
-				//TO DO: Print error messages
+		// get to reading the .gbk file into the btree
+		Scanner scan = new Scanner(gbk);
+		String dummy = null;
+		
+		while(scan.hasNextLine()) {
+			//proceed to the word ORIGIN
+			while(dummy == null && scan.hasNextLine()) {
+				dummy = scan.findInLine("ORIGIN");   // move the scanner to just past ORIGIN
+				scan.nextLine();                    // advance scanner to the next line, dummy is either null or ORIGIN
 			}
-			System.out.println("done");
 			
-			if(cacheInUse) {
-				bTree.flushCache();   
+			// if the block above worked, dummy = "ORIGIN" and the scanner will be at the starting
+			// of the line after the occurrence of ORIGIN, right where we want to be
+			// time to construct a gbkSequence!
+			
+			//System.out.println(dummy);
+			String gbkSequence = "";				// overall sequence we're extracting
+			String seq = "";						// sequence pieces used to build gbkSequence
+			
+			while(scan.hasNext() && seq.compareTo("//") != 0){		// proceed until a "//" occurs
+				seq = scan.next();
+			    for(int i = 0; i < seq.length(); i++){
+			     if(seq.charAt(i) == 'a' || seq.charAt(i) == 't' || seq.charAt(i) == 'c' || seq.charAt(i) == 'g')
+			    	  gbkSequence += seq.charAt(i);		// append desired characters to gbkSequenc
+			      else if(seq.charAt(i) == 'n') {
+			    	  if(gbkSequence.compareTo("") != 0) {	// first instance of a 'n' in a sequence being read
+			    		  //System.out.println(gbkSequence);
+			    		  processSequence(k,gbkSequence,bTree);	// process sequence as it stands
+			    		  gbkSequence = "";					// reset sequence to pick up once out of the 'n's
+			    	  }
+			      }
+			    }
 			}
-			reader.close();
+			dummy = null;
+			//System.out.println(gbkSequence);
+			processSequence(k,gbkSequence,bTree);					// process remaining sequence
+			// should return to the top of the loop and start looking for another instance of ORIGIN
+		}
+		scan.close();  // done reading the file, bTree should be populated with the goodies
+		if(debugLevel > 0) {		// handle debug level 1
+			String dump;
+			dump = gbk + ".btree.data.dump." + k;
+			File dumpFile = new File(dump);
+			dumpFile.delete();
+			dumpFile.createNewFile();
+			PrintWriter writer = new PrintWriter(dumpFile);
+			bTree.inOrderPrint(bTree.getRoot());
+			writer.close();
+		}
 	}
-		
+	
 	/**
-	 * Optimal degree is found by using a formula given in 
+	 * Optimal degree is found by using a formula given in
 	 * PowerPoint 15-B-Trees.pptx slide 14. The formula uses
 	 * variables for a disk block size of 4096 bytes.
-	 * Each node has a 200 bytes of meta-data to store.
-	 * The size of each key is 120 bytes.
-	 * Each pointer has size 8 bytes.
+	 * Each node has a ? bytes of meta-data to store.
+	 * 	4 bytes - int numKeys
+	 * 	4 bytes - int offset
+	 * 	1 byte 	- boolean isLeaf
+	 * 
+	 * The size of each treeObject is 16 bytes(key - 8 byte + freq - 8 byte)   	2m-1 treeObjects per node
+	 * Each pointer has size 4 bytes. 2m - child pointers + 1 - parent pointer	2m+1 pointers per node
 	 * Optimal degree (m) is found using this formula:
-	 * "4096 = 200 + 8 + 120*(m-1) + 8 * (m)"
-	 * m came out to be 30.
+	 * "4096 = 8 + 16*(2m-1) + 4* (2m+1)"
+	 * m came out to be 85.
 	 * @return optimal degree
 	 */
 	public static int optimalDegree() {
-		int optimalDegree = 30;
+		int optimalDegree = 85;
 		return optimalDegree;
 	}
-	
 	/**
 	 * Prints error message if arguments are not in correct format.
 	 * Prints Usage help
@@ -210,4 +160,52 @@ public class GeneBankCreateBTree {
 		System.err.println("[<cache size>]: Optional. If cache is enabled, then size of cache.");
 		System.err.println("[<debug level>]: 0 for regular output, 1 for file dump.");
 	}
+	/**
+	 * Helper method, converts a DNA sequence to a base 4 number
+	 * a = 0 c = 1 g = 2 t =3 (only letters it should be getting passed)
+	 * ie:
+	 * TAGCA = 3*4^4 + 0*4^3 + 2*4^2 + 1*4^1 + 0*4^0
+	 * 
+	 * @param sequence - a sequence of DNA bases(a,t,c,g)
+	 * @return long value equivalent to a base-4 translation of a provided sequence
+	 */
+	public static long convertToLong(String sequence) {
+		sequence = sequence.toLowerCase();
+		long result = 0;
+
+		for(int i = 0; i < sequence.length(); i++){
+			long temp = 0;
+
+			if (sequence.charAt(i) == 'a') temp = 0;
+			if (sequence.charAt(i) == 'c') temp = 1;
+			if (sequence.charAt(i) == 'g') temp = 2;
+			if (sequence.charAt(i) == 't') temp = 3;
+			result += temp * Math.pow(4,sequence.length() - (1 + i));
+		}
+
+		return result;
+	}
+	
+	/**
+	 * Helper method, processes a given string into subsequences of a specified length,
+	 * converts subsequences to a long type key value and inserts the key into a specified 
+	 * Btree object 
+	 * @param k				- 	length of subsequences to generate
+	 * @param gbkSequence	- 	sequence of DNA bases to process
+	 * @param btree			-	Btree object to add subsequences to
+	 */
+	public static void processSequence(int k, String gbkSequence, BTree btree) {
+		for(int i = 0; i <= gbkSequence.length() - k; i++) {
+			String dummy = "";
+			for(int j=i;j<i+k;j++) {
+				dummy += gbkSequence.charAt(j);
+			}
+			long key = convertToLong(dummy);
+			btree.insert(key);
+			//System.out.println(dummy +" : "+key);
+			
+		}
+	}
+
+
 }
