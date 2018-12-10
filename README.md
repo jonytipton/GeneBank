@@ -49,3 +49,11 @@ of the root note to the disk. The meta-data for each node, containing the isLeaf
 and the number of keys, is then written. Each node contains a linked list of child pointers
 and TreeObjects, its offset and the offset of its parent. All of this information is then
 used to move nodes when manipulating the BTree.
+
+Discussion:
+Over the course of 3 weeks, we had gotten together through text and in person to put 
+together this project. It was divided so that all 5 of us could have something to do.
+Bridgette and Aubrey worked on BTree.java and BTreeNode.java; Jonathan worked on 
+GeneBankSearch.java and GBFileConvert.java; Samantha worked on GeneBankCreateBTree.java;
+and Matt worked on debugging the different classes. 
+
