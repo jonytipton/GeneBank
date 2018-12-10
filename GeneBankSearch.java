@@ -1,23 +1,33 @@
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /**
- * GeneBankSearch 
- * 
+ * GeneBankSearch
+ *
  * Searches the BTree file created in the
  * GeneBankCreateBTree class for DNA sequences
  * listed in the queryFile
  */
 public class GeneBankSearch {
-	
+
 	private static boolean useCache = false;
 	private static boolean debug = false;
 	private static int cacheSize = 0;
-	private static String btreeFile;
+	private static String btreeFilename;
 	private static String queryFile;
-	
+	private static String debugFile;
+	private static BTree bTree;
+	private static PrintWriter writer;
+	private static File dFile;
+	private static File query;
+	private static File btreeFile;
+
 	public static void main(String [] args) {
-	
+
 		//Check for number of arguments
 		if (args.length < 3 || args.length > 5) {
 			System.out.println("Incorrect Number of Arguments!");
@@ -40,17 +50,17 @@ public class GeneBankSearch {
 			printUsage();
 			System.exit(1);
 		}
-		btreeFile = args[1];
+		btreeFilename = args[1];
 		queryFile = args[2];
 		
 		//Cache Size (Optional)
 		if (useCache && args.length > 3) {
 			cacheSize = Integer.parseInt(args[3]);
 		}
-		
+
 		/*Debug
-		The output of the queries should be printed on the standard output stream. 
-		A sample GeneBankSearch output is in test3_query7_result.
+		0 - The output of the queries should be printed on the standard output stream.
+		1 - The output of the queries print to a file, example test3_query7_result.
 		Only one level of debug required.*/
 		if (args.length == 5) {
 			if (args[4].equals("1")) {
@@ -63,162 +73,96 @@ public class GeneBankSearch {
 				System.exit(1);
 			}
 		}
-		
-		String sequenceString = "";
-		String degreeString = "";
-		
-		//find degree of the btreeFile
-		for (int i = btreeFile.length() - 1; i >= 0; i--) {
-			if (btreeFile.charAt(i) != '.') {
-					degreeString += btreeFile.charAt(i);
+		String btreeSource = "";
+		if(debug){
+			int x = 0;
+			while(btreeFilename.charAt(x) != '.'){
+				btreeSource += btreeFilename.charAt(x);
 			}
-			else {
-				break;
+			debugFile = btreeSource + "_" + queryFile;
+			dFile = new File(debugFile);
+			dFile.delete();
+			try {
+				dFile.createNewFile();
+			} catch (IOException e1) {
+				System.out.println("File woes upon you, thanks to: "+dFile);
 			}
-		}
-		
-		degreeString = reverse(degreeString);
-		
-		//find sequence of btreeFile
-		for (int i = btreeFile.length() - degreeString.length() - 2; i >= 0; i--) {
-			if (btreeFile.charAt(i) != '.') {
-				sequenceString += btreeFile.charAt(i);
-			}
-			else {
-				break;
+			try {
+				writer = new PrintWriter(dFile);
+			} catch (FileNotFoundException e) {
+				System.out.println("File woes upon you, thanks to: "+dFile);
 			}
 		}
-		
-		sequenceString = reverse(sequenceString);
-		
-		//convert from string to int
-		int degree = Integer.parseInt(degreeString); 
-		int sequence = Integer.parseInt(sequenceString); 
 		
 		try {
-			BTree bTree = new BTree(degree, btreeFile, useCache, cacheSize);
-			Scanner scan = new Scanner(queryFile);
-			
-			while (scan.hasNext()) {
+			File btreeFile = new File(btreeFilename);		// make the btreeFile from the btreeFilename
+			bTree = new BTree(btreeFile);					// instantiate a BTree from btreeFile
+			query = new File(queryFile);					
+			Scanner scan = new Scanner(query);
+
+			while (scan.hasNextLine()) {
 				String search = scan.nextLine();
 				long convertedSearch = convertToLong(search);
 				TreeObject tObject = bTree.search(bTree.getRoot(), convertedSearch);
-				
+
 				if (tObject != null) {
-					System.out.println(convertToString(tObject.getData(), sequence) + ": " + tObject.getFrequency());
+					if(debug) {
+						writer.println(search + ": " + tObject.getFrequency());
+						
+					}
+					else {
+						System.out.println(search + ": " + tObject.getFrequency());
+					}
+				}
+				else{
+					if(debug) {
+						writer.println(search + ": 0");
+					}
+					else {
+						System.out.println(search + ": 0");   // print unfound key
+					}
 				}
 			}
 			scan.close();
 		} catch (Exception e) { //catch file not found
-			e.printStackTrace();
-		}   
+			System.out.println("File woes upon you, thanks to: "+ btreeFilename);
+		}
 	}
-	
+
 	/*
 	 *  Prints proper usage for GeneBankSearch
 	 */
 	private static void printUsage() {
 		System.out.println("Usage: java GeneBankSearch "
-						 + "<0/1(no/with Cache)> <btree file> <query file> "
-						 + "[<cache size>] [<0/1(no/yes debug>]");
+				+ "<0/1(no/with Cache)> <btree file> <query file> "
+				+ "[<cache size>] [<0/1(no/yes debug>]");
 	}
 	
-	/*
-	 * Reverse the order of a string sequence
+	/**
+	 * Helper method, converts a DNA sequence to a base 4 number
+	 * a = 0 c = 1 g = 2 t =3 (only letters it should be getting passed)
+	 * ie:
+	 * TAGCA = 3*4^4 + 0*4^3 + 2*4^2 + 1*4^1 + 0*4^0
 	 * 
-	 * @param input, string being reversed for proper search
-	 * @return reversed input string
+	 * @param sequence - a sequence of DNA bases(a,t,c,g)
+	 * @return long value equivalent to a base-4 translation of a provided sequence
 	 */
-	private static String reverse(String input) {
-		if (input.length() == 1) {
-			return input;
-		}
-		return "" + input.charAt(input.length() - 1)  + reverse(input.substring(0, input.length() -1));
-	}
-	
+	public static long convertToLong(String sequence) {
+		sequence = sequence.toLowerCase();
+		long result = 0;
 
-		/**
-	     * Converts a string type into a long, character by character a, c, g, t it
-	     * converts to binary representation.
-	     *
-	     * @param sequence substring of the dna sequence to convert into a long
-	     * @return key which is a long type
-	     */
-		public static long convertToLong(String sequence) {
-			long key = 0;
-			sequence = sequence.toLowerCase();
-			
-			for (int i = 0; i < sequence.length(); i++) {
-				if (sequence.charAt(i) == 'a') { //00
-					if (i == 0) {
-						key = 0;
-					}
-					else {
-						key = key << 2; //shift left by 2, fill with 0
-						key = key | 0;
-					}
-				}
-				if (sequence.charAt(i) == 'c') { //01
-					if (i == 0) {
-						key = 1;
-					}
-					else {
-						key = key << 2; //shift left by 2
-						key = key | 1;
-					}
-				}
-				if (sequence.charAt(i) == 'g') { //10
-					if (i == 0) {
-						key = 2;
-					}
-					else {
-						key = key << 2; //shift left by 2
-						key = key | 2;
-					}
-				}
-				if (sequence.charAt(i) == 't') { //11
-					if (i == 0) {
-						key = 3;
-					}
-					else {
-						key = key << 2; //shift left by 2
-						key = key | 3;
-					}
-				}
-			}
-			return key;
-		}
-		
-		/**
-	     * Converts a long type into a String type
-	     *
-	     * @param sequence    the long type to be converted
-	     * @param length the length of each DNA sequence between splits
-	     */
-		public static String convertToString(long sequence, int length) {
-			String textSequence = "";
+		for(int i = 0; i < sequence.length(); i++){
 			long temp = 0;
-			
-			for (int i = 1; i <= length; i++) {
-				//find starting point in bit sequence
-				temp = (sequence & 3L << (length - i) * 2);
-				//isolate sequence to two bits for comparison
-				temp = temp >> (length - i) * 2;
-					
-				//compare 
-				if (temp == 0L) { 
-					textSequence += 'a';
-				}
-				else if (temp == 1L) {
-					textSequence += 'c';
-				}
-				else if (temp == 2L) {
-					textSequence += 'g';
-				}
-				else if (temp == 3L) {
-					textSequence += 't';
-				}
-			}
-			return textSequence;
+
+			if (sequence.charAt(i) == 'a') temp = 0;
+			if (sequence.charAt(i) == 'c') temp = 1;
+			if (sequence.charAt(i) == 'g') temp = 2;
+			if (sequence.charAt(i) == 't') temp = 3;
+			result += temp * Math.pow(4,sequence.length() - (1 + i));
 		}
+
+		return result;
+	}
+
+
 }
