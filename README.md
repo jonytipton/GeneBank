@@ -36,8 +36,6 @@ GeneBankSearch.java:
 $ java GeneBankSearch <cache> <btree file> <query file> [<cache size>] [<debug level>]
 
 
-Timing Results:
-
 
 
 BTree Design:
@@ -53,7 +51,7 @@ used to move nodes when manipulating the BTree.
 Discussion:
 Over the course of 3 weeks, we had gotten together through text and in person to put 
 together this project. It was divided so that all 5 of us could have something to do.
-Bridgette and Aubrey worked on BTree.java and BTreeNode.java; Jonathan worked on 
+Bridgette and Aubrey worked on BTree.java and TreeObject.java; Jonathan worked on 
 GeneBankSearch.java and GBFileConvert.java; Samantha worked on GeneBankCreateBTree.java;
 and Matt worked on debugging the different classes. 
 
