@@ -497,8 +497,8 @@ public class BTree{
 				}if(i < n.getNumKeys()){
 					long data = n.getKey(i).getData();
 					RAF.writeLong(data);
-					int freq = n.getKey(i).getFrequency();
-					RAF.writeInt(freq);
+					long freq = n.getKey(i).getFrequency();
+					RAF.writeLong(freq);
 				}else if(i >= n.getNumKeys() || n.isLeaf()){
 					RAF.writeLong(0);
 				}
