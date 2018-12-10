@@ -1,66 +1,38 @@
+import java.lang.Math;
 /**
  * Converts Long and Strings
  */
 public class GBFileConvert {
 	private long key = 0;
-	
+
 	public long getKey() {
 		return key;
 	}
-	
+
 	//64 bit
-	//Not sure if the key | "value" code returns expected result
-	/**
-     * Converts a string type into a long, character by character a, c, g, t it
-     * converts to binary representation.
-     *
-     * @param sequence substring of the dna sequence to convert into a long
-     * @return key which is a long type
-     */
+	/** my take on the string to long conversion
+	* converts letters in the string to numbers
+	* a = 0 c = 1 g = 2 t =3 (only letters it should be getting passed)
+	* then treats it as a base 4 number, ie:
+	* TAGCA = 3*4^4 + 0*4^3 + 2*4^2 + 1*4^1 + 0*4^0
+	**/
 	public long convertToLong(String sequence) {
 		sequence = sequence.toLowerCase();
-		
-		for (int i = 0; i < sequence.length(); i++) {
-			if (sequence.charAt(i) == 'a') { //00
-				if (i == 0) {
-					key = 0;
-				}
-				else {
-					key = key << 2; //shift left by 2, fill with 0
-					key = key | 0;
-				}
-			}
-			if (sequence.charAt(i) == 'c') { //01
-				if (i == 0) {
-					key = 1;
-				}
-				else {
-					key = key << 2; //shift left by 2
-					key = key | 1;
-				}
-			}
-			if (sequence.charAt(i) == 'g') { //10
-				if (i == 0) {
-					key = 2;
-				}
-				else {
-					key = key << 2; //shift left by 2
-					key = key | 2;
-				}
-			}
-			if (sequence.charAt(i) == 't') { //11
-				if (i == 0) {
-					key = 3;
-				}
-				else {
-					key = key << 2; //shift left by 2
-					key = key | 3;
-				}
-			}
+		long result = 0;
+
+		for(int i = 0; i < sequence.length(); i++){
+			long temp = 0;
+
+			if (sequence.charAt(i) == 'a') temp = 0;
+			if (sequence.charAt(i) == 'c') temp = 1;
+			if (sequence.charAt(i) == 'g') temp = 2;
+			if (sequence.charAt(i) == 't') temp = 3;
+			result += temp * Math.pow(4,sequence.length() - (1 + i));
 		}
-		return key;
+
+		return result;
 	}
-	
+
 	//31 length sequence
 	/**
      * Converts a long type into a String type
@@ -71,15 +43,15 @@ public class GBFileConvert {
 	public String convertToString(long sequence, int length) {
 		String textSequence = "";
 		long temp = 0;
-		
+
 		for (int i = 1; i <= length; i++) {
 			//find starting point in bit sequence
 			temp = (sequence & 3L << (length - i) * 2);
 			//isolate sequence to two bits for comparison
 			temp = temp >> (length - i) * 2;
-				
-			//compare 
-			if (temp == 0L) { 
+
+			//compare
+			if (temp == 0L) {
 				textSequence += 'a';
 			}
 			else if (temp == 1L) {
@@ -95,3 +67,4 @@ public class GBFileConvert {
 		return textSequence;
 	}
 }
+
