@@ -54,4 +54,11 @@ together this project. It was divided so that all 5 of us could have something t
 Bridgette and Aubrey worked on BTree.java and TreeObject.java; Jonathan worked on 
 GeneBankSearch.java and GBFileConvert.java; Samantha worked on GeneBankCreateBTree.java;
 and Matt worked on debugging the different classes. 
+Alas, time got the best of use.  We were unable to resolve issues eminating from the BTree 
+class by official submission time.  We are of the belief that GeneBankCreateBTree and 
+GeneBankSearch are otherwise functioning(without cache capabilities) based on testing performed. 
+The debug team is continuing to work on this issue, but we felt it best to submit something by 
+the deadline
 
+Extra Credit:
+Cache not yet implemented fully, as such, we have no runtime data to share.
