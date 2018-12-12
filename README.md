@@ -36,8 +36,6 @@ GeneBankSearch.java:
 $ java GeneBankSearch <cache> <btree file> <query file> [<cache size>] [<debug level>]
 
 
-
-
 BTree Design:
 
 The program uses a few different classes to accomplish the end goal. These classes are
@@ -54,11 +52,21 @@ together this project. It was divided so that all 5 of us could have something t
 Bridgette and Aubrey worked on BTree.java and TreeObject.java; Jonathan worked on 
 GeneBankSearch.java and GBFileConvert.java; Samantha worked on GeneBankCreateBTree.java;
 and Matt worked on debugging the different classes. 
-Alas, time got the best of us.  We were unable to resolve issues eminating from the BTree 
-class by official submission time.  We are of the belief that GeneBankCreateBTree and 
+We are of the belief that GeneBankCreateBTree and 
 GeneBankSearch are otherwise functioning(without cache capabilities) based on testing performed. 
-The debug team is continuing to work on this issue, but we felt it best to submit something by 
-the deadline
+
 
 Extra Credit:
-Cache not yet implemented fully, as such, we have no runtime data to share.
+Cache implemented
+
+    Using:
+    java GeneBankCreateBTree 0 0 test3.gbk 6 1 
+    the time came out to 5 min, 9sec. 
+    
+    Using:
+    java GeneBankCreateBTree 1 0 test3.gbk 6 100 1 
+    the time came out to 3 min, 47sec.
+    
+    Using:
+    java GeneBankCreateBTree 1 0 test3.gbk 6 500 1
+    the time came out to 3 min, 33sec.
