@@ -1,4 +1,4 @@
-import java.io.File;
+import java.io.File;  
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,572 +9,625 @@ import java.util.LinkedList;
  * class contains the BTreeNode structure
  */
 
-public class BTree{
-
+public class BTree
+{
 	private int degree;
-	private BTreeNode root;
-	private int BTreeOffset;
-	private int nodeSize;
-	private int insertionPoint;
-	private File file;
-	private RandomAccessFile RAF;
-	//	private BTreeCacheNode.BTreeCache cache;
-	//	private BTreeCacheNode BTCN;
-	//	private Cache MattCache;
+    private BTreeNode root;
+    private int offset;
+    private int nodeSize;
+    private BTreeCacheNode.BTreeCache cache;
+    private RandomAccessFile accessFile;
+    private int insertionPoint;
 
-	/**
-	 * SubClass that contains constructor for BTreeNode
-	 */
-	class BTreeNode
-	{
-		private int parent;
-		private LinkedList<TreeObject> keys;
-		private LinkedList<Integer> children;
-		private int numKeys;
-		private int offset;
-		private boolean isLeaf;
+    /**
+     * Inner Class that contains constructor for BTreeNode
+     */
+    class BTreeNode
+    {
 
-		public BTreeNode()
-		{	
-			children = new LinkedList<Integer>();
-			keys = new LinkedList<TreeObject>();
-			numKeys = 0;
-			parent = -1;
-		}
-
-		public int getParent(){
-			return parent;
-		}
-
-		public void setParent(int parent){
-			this.parent = parent;
-		}
-
-		public int getOffset()
-		{
-			return offset;
-		}
-
-		public void setOffset(int offset)
-		{
-			this.offset = offset;
-		}
-
-		public TreeObject getKey(int i){
-			TreeObject obj = keys.get(i);
-			return obj;
-		}
-
-		public void addKey(TreeObject o)
-		{
-			keys.add(o);
-		}
-
-		public void addKey(TreeObject o, int i)
-		{
-			keys.add(i, o);
-		}
-
-		public TreeObject removeKey(int i){
-			return keys.remove(i);
-		}
-
-		public LinkedList<TreeObject> getKeys()
-		{
-			return keys;
-		}
-
-		public int getNumKeys()
-		{
-			return numKeys;
-		}
-
-		public void setNumKeys(int numKeys){
-			this.numKeys = numKeys;
-		}
-
-		public boolean isLeaf()
-		{
-			return isLeaf;
-		}
-
-		public void setIsLeaf(boolean isLeaf)
-		{
-			this.isLeaf = isLeaf;
-		}
-
-		public LinkedList<Integer> getChildren()
-		{
-			return children;
-		}
-
-		public void addChild(int index)
-		{
-			children.add(index);
-		}
-
-		public void addChild(Integer a, int index)
-		{
-			children.add(index, a);
-		}
-
-		public int getChild(int index)
-		{
-			return children.get(index).intValue();
-		}
-
-		public int removeChild(int index)
-		{
-			return children.remove(index);
-		}
-
-		public String toString(){
-			String s = new String();
-			s += "Keys: ";
-			for(int i = 0; i < keys.size(); i++){
-				s+= (keys.get(i) + " ");
-			}
-			s += "\nchildren: ";
-			for(int i = 0; i < children.size(); i++){
-				s += (children.get(i) + " " );
-			}
-			return s;
-		}
-	}
-
-	/**
-	 * BTree constrcutor
-	 * @params deg degree of the tree
-	 * @params FileName simple filename
-	 * @params useCache boolean value whether using cache or not
-	 * @params cacheSize how large the cache implementation should be
-	 **/
-	public BTree(int deg, String FileName, boolean useCache, int cacheSize){
-		nodeSize = (32* deg - 3);
-		this.degree = deg;
-		BTreeOffset = 12;
-		insertionPoint = (BTreeOffset + nodeSize);
-
-		//		if(useCache){
-		//			BTCN = new BTreeCacheNode(root, 0 , cacheSize);
-		//			cache = BTCN.BTC;
-		//			//MattCache = new Cache(cachesize); 
-		//			
-		//		}
-
-		BTreeNode n = new BTreeNode();
-		root = n;
-		root.setOffset(BTreeOffset);
-		n.setIsLeaf(true);
-		n.setNumKeys(0);
-
-		try{
-			file = new File(FileName);
-			file.delete();
-			try {
-				file.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			RAF = new RandomAccessFile(file, "rw");
-		}catch(FileNotFoundException e){
-			System.err.println("Corrupt file");
-			System.exit(-1);
-		}
-		writeTreeMetadata();
-	}
-
-	/**
-	 * Instantiates a BTree
-	 *
-	 * @param fileName filename that should be used
-	 */
-	public BTree(File filename){
-		try{
-			RAF = new RandomAccessFile(filename, "r"); 
-		}
-		catch(FileNotFoundException e){
-			System.err.println("Corrupt file");
-			System.exit(-1);
-		}
-		readTreeMetadata();
-		root = readNode(BTreeOffset);
-	}
-
-	public BTree() {super();}
-
-	/**
-	 * Finds and returns root of the BTreeNode
-	 *
-	 * @return root of tree
-	 */
-	public BTreeNode getRoot(){
-		return root;
-	}
-
-	/**
-	 * Inserts into the BTree
-	 *
-	 * @param k to be inserted
-	 */ 
-	void insert(long k)
-	{
-		BTreeNode r = this.root;
-
-		int i = r.getNumKeys();
-
-		if(i == 2*degree-1){ 
-			TreeObject o = new TreeObject(k);
-			while(i > 0 && o.compareTo(r.getKey(i-1)) < 0){
-				i--;
-			}if(i > 0 && o.compareTo(r.getKey(i-1)) == 0)
-				r.getKey(i-1).increaseFrequency();
-			else{
-				BTreeNode n = new BTreeNode();
-				n.setOffset(r.getOffset());
-				root = n;
-				r.setOffset(insertionPoint);
-				r.setParent(n.getOffset());
-				n.setIsLeaf(false);
-				n.addChild(r.getOffset());
-				splitChild(n,0,r);
-				insertNotFull(n,k);
-			}
-		}else
-			insertNotFull(r,k);
-
-	}
-
-	/**
-	 * Inserts into the BTree ensuring the btree is not full
-	 *
-	 * @param key     to be inserted
-	 * @param x the BTreeNode to be inserted
-	 */
-	public void insertNotFull(BTreeNode x, long key){
-		int i = x.getNumKeys();
-		TreeObject o = new TreeObject(key);
-		if(x.isLeaf()){
-			if(x.getNumKeys() != 0){
-				while(i > 0 && o.compareTo(x.getKey(i-1)) < 0){
-					i--;
-				}
-			}if(i > 0 && o.compareTo(x.getKey(i-1)) == 0){
-				x.getKey(i-1).increaseFrequency();
-			}else{
-				x.addKey(o, i);
-				x.setNumKeys(x.getNumKeys()+1);
-			}
-			writeNode(x,x.getOffset());
-		}else{
-			while(i > 0 && (o.compareTo(x.getKey(i-1)) < 0)){
-				i--;
-			}if(i > 0 && o.compareTo(x.getKey(i-1)) == 0){
-				x.getKey(i-1).increaseFrequency();
-				writeNode(x,x.getOffset());
-				return;
-			}
-			int offset = x.getChild(i);
-			BTreeNode y = readNode(offset);
-			if(y.getNumKeys() == 2 *degree -1){
-				int j = y.getNumKeys();
-				while(j > 0 && (o.compareTo(x.getKey(j-1)) < 0)){
-					j--;
-				}if(j > 0 && o.compareTo(x.getKey(j-1)) == 0){
-					y.getKey(j-1).increaseFrequency();
-					writeNode(y,y.getOffset());
-					return;
-				}else{
-					splitChild(x,i,y);
-					if(o.compareTo(x.getKey(i)) > 0){
-						i++;
-					}
-				}
-			}
-			offset = x.getChild(i);
-			BTreeNode child = readNode(offset);
-			insertNotFull(child,key);
-		}
-	}
-
-	/**
-	 * Splits child node
-	 *
-	 * @param x the btree Node to be split
-	 * @param y       the node that will be split
-	 * @param i       the degree index
-	 */
-	public void splitChild(BTreeNode x, int i, BTreeNode y){
-		BTreeNode z = new BTreeNode();
-		z.setIsLeaf(y.isLeaf());
-		z.setParent(y.getParent());
-		for(int j = 0; j < degree - 1; j++){
-			z.addKey(y.removeKey(degree));
-			z.setNumKeys(z.getNumKeys()+1);
-			y.setNumKeys(y.getNumKeys()-1);
-		}if(!y.isLeaf()){
-			for(int j = 0; j < degree; j++){
-				z.addChild(y.removeChild(degree));
-			}
-		}
-		x.addKey(y.removeKey(degree-1), i);
-		x.setNumKeys(x.getNumKeys()+1);
-		y.setNumKeys(y.getNumKeys()-1);
-		if(x == root && x.getNumKeys() == 1){
-			writeNode(y,insertionPoint);
-			insertionPoint += nodeSize;
-			z.setOffset(insertionPoint);
-			x.addChild(z.getOffset(), i+1);
-			writeNode(z, insertionPoint);
-			writeNode(x, BTreeOffset);
-			insertionPoint += nodeSize; 
-		}else{
-			writeNode(y,y.getOffset());
-			z.setOffset(insertionPoint);
-			writeNode(z,insertionPoint);
-			x.addChild(z.getOffset(), i+1);
-			writeNode(x,x.getOffset());
-			insertionPoint += nodeSize;
-		}
-	}
-
-	/**
-	 * Search the BTree
-	 *
-	 * @param key     to be inserted
-	 * @param x		 the node to be found
-	 */
-	public TreeObject search(BTreeNode x, Long key)
-	{
-		int i = 0;
-		TreeObject o = new TreeObject(key);
-		while(i < x.getNumKeys() && (o.compareTo(x.getKey(i)) > 0)){
-			i++;
-		}if(i < x.getNumKeys() && o.compareTo(x.getKey(i)) == 0){
-			return x.getKey(i);
-		}if(x.isLeaf()){
-			return null;
-		}else{
-			int offset = x.getChild(i);
-			BTreeNode n = readNode(offset);
-			return search(n, key);
-		}
-	}
-
-	/**
-	 * Writes the metadata of the tree, including the degree ect.
-	 */
-	public void writeTreeMetadata(){
-		try{
-			RAF.seek(0);//sets the pointer to the beginning of the file
-			RAF.writeInt(degree);
-			RAF.writeInt(32*degree-3);
-			RAF.writeInt(12);
-		}catch(IOException e){
-			System.err.println("IO Exception occurred!");
-			System.exit(-1);
-		}	
-	}
-	/**
-	 * Writes the Node to the metadata, using the offset
-	 * @param x		the Node being written to metadata
-	 * @param offset	the offset of the node
-	 */
-	private void writeNodeMetadata(BTreeNode x, int offset) {
-		try{
-			RAF.seek(offset);
-			RAF.writeBoolean(x.isLeaf());
-			RAF.writeInt(x.getNumKeys());
-		}catch(IOException e){
-			System.err.println("IO Exception occurred!");
-			System.exit(-1);
-		}
-	}
-
-	/**
-	 * Reads the meta data from file
-	 */
-	private void readTreeMetadata() {
-		try{
-			RAF.seek(0);;
-			degree = RAF.readInt();
-			nodeSize = RAF.readInt();
-			BTreeOffset = RAF.readInt();
-		}catch(IOException e){
-			System.err.println("IO Exception occurred!");
-			System.exit(-1);
-		}
-	}
+        private int parent;
+        private LinkedList<TreeObject> keys;
+        private LinkedList<Integer> children;
+        private int numKeys;
+        private int offset;
+        private boolean isLeaf;
 
 
-	/** Reads a cached node
-	 *
-	 * @param offset of the nodes
-	 */
-	private BTreeNode readNode(int offset) {
-		BTreeNode y = null;
-		//if node is cached we can read it from there
-		//		if(cache != null){
-		//			y = cache.readNode(offset);
-		//		}if (y != null){
-		//			return y;
-		//		}
-		y = new BTreeNode();
-		TreeObject o = null;
-		y.setOffset(offset);
-		int j = 0;
-		try{
-			RAF.seek(offset);
-			boolean isLeaf = RAF.readBoolean();
-			y.setIsLeaf(isLeaf);
-			int n = RAF.readInt();
-			y.setNumKeys(n);
-			int parent = RAF.readInt();
-			y.setParent(parent);
-			for(j = 0; j < 2 *degree-1; j++){
-				if(j < y.getNumKeys() + 1 && !y.isLeaf()){
-					int child = RAF.readInt();
-					y.addChild(child);
-				}else if(j >= y.getNumKeys() + 1 || y.isLeaf()){
-					RAF.seek(RAF.getFilePointer() + 4);
-				}if(j < y.getNumKeys()){
-					long value = RAF.readLong();
-					int frequency = RAF.readInt();
-					o = new TreeObject(value, frequency);
-					y.addKey(o);
-				}
-			}if(j == y.getNumKeys() && !y.isLeaf()){
-				int child = RAF.readInt();
-				y.addChild(child);
-			}
-		}catch(IOException e){
-			System.err.println(e.getMessage());
-			System.exit(-1);
-		}
-		return y;
-	}
+        BTreeNode()
+        {
+            keys = new LinkedList<>();
+            children = new LinkedList<>();
+            numKeys = 0;
+            parent = -1;
+        }
 
-	/**
-	 * Writes a node pushed off the cache
-	 *
-	 * @param n the node toe be written
-	 */
-	private void writeNode(BTreeNode n, int offset) {
-		//		if(cache != null){
-		//			BTreeNode cnode = cache.add(n,offset);
-		//			if(cnode != null) 
-		//				writeNodeToFile(cnode,cnode.getOffset());
-		//		}else{
-		writeNodeToFile(n,offset);
-		//}
-	}
+        void setIsLeaf(boolean isLeaf)
+        {
+            this.isLeaf = isLeaf;
+        }
 
-	/**
-	 * cache clearing
-	 */
-	//	public void flushCache(){
-	//		if(cache != null){
-	//			for(BTreeNode cnode : cache){
-	//				writeNodeToFile(cnode, cnode.getOffset());
-	//			}
-	//		}
-	//	}
+        boolean isLeaf()
+        {
+            return isLeaf;
+        }
 
-	/**
-	 * Writes a node pushed off the cache
-	 *
-	 * @param n 	the node to be written
-	 * @param offest the offset of the node 
-	 */
-	private void writeNodeToFile(BTreeNode n, int offset){
-		int i = 0;
-		try{
-			writeNodeMetadata(n,n.getOffset());
-			RAF.writeInt(n.getParent());
-			for(i = 0; i< 2*degree-1; i++){
-				if(i < n.getNumKeys() + 1 || n.isLeaf()){
-					RAF.writeInt(0);
-				}if(i < n.getNumKeys()){
-					long data = n.getKey(i).getData();
-					RAF.writeLong(data);
-					long freq = n.getKey(i).getFrequency();
-					RAF.writeLong(freq);
-				}else if(i >= n.getNumKeys() || n.isLeaf()){
-					RAF.writeLong(0);
-				}
-			}if(i == n.getNumKeys() && !n.isLeaf()){
-				RAF.writeInt(n.getChild(i));
-			}
-		}catch(IOException e){
-			System.err.println("IO Exception");
-			System.exit(-1);
-		}
-	}
+        int getKeyCount()
+        {
+            return numKeys;
+        }
 
-	public void inOrderPrint(BTreeNode node){
-		System.out.println(node);
-		if(node.isLeaf() == true){
-			for(int i = 0; i < node.getNumKeys(); i++){
-				System.out.println(node.getKey(i));
-			}
-			return;
-		}
+        void setKeyCount(int keyCount)
+        {
+            this.numKeys = keyCount;
+        }
 
-		for(int i = 0; i < node.getNumKeys(); i++){
-			int offset = node.getChild(i);
-			BTreeNode y = readNode(offset);
-			inOrderPrint(y);
-			if(i < node.getNumKeys()){
-				System.out.println(node.getKey(i));
-			}
-		}
-	}
+        int getOffset()
+        {
+            return offset;
+        }
 
-		/**
-	     * Prints to file, instantiating a printWriter
-	     *
-	     * @param node           the node to be printed
-	     * @param pwriter         the setup instantiation of PrintWriter
-	     * @param sequenceLength how long each DNA sequence should be
-	     */
-		public void inOrderPrintToWriter(BTreeNode node, PrintWriter pwriter, int sequenceLength) throws IOException{
-			GBFileConvert gbc = new GBFileConvert();
-			for( int i = 0; i < node.getNumKeys(); i++){
-				pwriter.println(node.getKey(i).getFrequency() + " ");
-				pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
-			}if(!node.isLeaf()){
-				for(int i = 0; i < node.getNumKeys() + 1; ++i){
-					int offset = node.getChild(i);
-					BTreeNode n = readNode(offset);
-					inOrderPrintToWriter(n,pwriter,sequenceLength);
-					if(i < node.getNumKeys()){
-						pwriter.print(node.getKey(i).getFrequency() + " ");
-						pwriter.println(gbc.convertToString(node.getKey(i).getData(), sequenceLength));	
-					}
-				}
-			}
-		}
+        void setOffset(int offset)
+        {
+            this.offset = offset;
+        }
 
-	public String convert(long key){
-		String result = "";
-		if(key == -1){
-			return result;
-		}
-		String temp = "";
-		String altTemp = "";
-		altTemp = Long.toBinaryString(key);
-		for(int i = insertionPoint * 2; i > 1; i -= 2){
-			try{
-				temp = altTemp.substring(i -1, i + 1);
-				if(temp.equals("00")) result = result + "A";
-				else if (temp.equals("11")) result = result + "T";
-				else if (temp.equals("01")) result = result + "C";
-				else if (temp.equals("10")) result = result + "G";
-			}catch(StringIndexOutOfBoundsException e){
-				e.printStackTrace();
-			}
-		}
-		return result;
-	}
+        TreeObject getKey(int i)
+        {
+            return keys.get(i);
+        }
 
+        int getParent()
+        {
+            return parent;
+        }
+
+        void setParent(int Parent)
+        {
+            this.parent = Parent;
+        }
+
+        void addKey(TreeObject obj)
+        {
+            keys.add(obj);
+        }
+
+        void addKey(TreeObject obj, int i)
+        {
+            keys.add(i, obj);
+        }
+
+        TreeObject removeKey(int i)
+        {
+            return keys.remove(i);
+        }
+
+        int getChild(int i)
+        {
+            return children.get(i);
+        }
+
+        void addChild(int i)
+        {
+            children.add(i);
+        }
+
+        void addChild(Integer c, int i)
+        {
+            children.add(i, c);
+        }
+
+        int removeChild(int i)
+        {
+            return children.remove(i);
+        }
+
+        public String toString()
+        {
+            StringBuilder s = new StringBuilder();
+            s.append("Keys: ");
+            for (TreeObject aKeyList : keys)
+            {
+                s.append(aKeyList).append(" ");
+            }
+            s.append("\nchildList: ");
+            for (Integer aChildList : children)
+            {
+                s.append(aChildList).append(" ");
+            }
+            return s.toString();
+        }
+    }
+    /**
+     * BTree creator
+     * @params deg degree of the tree
+     * @params FileName simple filename
+     * @params usingCache boolean value whether using cache or not
+     * @params cacheSize how large the cache implementation should be
+     */
+    public BTree(int deg, String FileName, boolean usingCache, int cacheSize)
+    {
+        nodeSize = (32 * deg - 3);
+        offset = 12;
+        insertionPoint = (offset + nodeSize);
+        this.degree = deg;
+        if (usingCache)
+        {
+            BTreeCacheNode cacheNode = new BTreeCacheNode(cacheSize);
+
+            cache = cacheNode.bTreeCache;
+        }
+
+        BTreeNode nodeOne = new BTreeNode();
+
+        root = nodeOne;
+        root.setOffset(offset);
+        nodeOne.setIsLeaf(true);
+        nodeOne.setKeyCount(0);
+
+        try
+        {
+            java.io.File file = new File(FileName);
+            accessFile = new RandomAccessFile(file, "rw");
+        } catch (FileNotFoundException fnfe)
+        {
+            System.err.println("File not found check the name and try again.");
+            System.exit(-1);
+        }
+
+        writeTreeMetadata();
+    }
+
+    /**
+     * Instantiates a BTree
+     *
+     * @param fileName filename that should be used
+     */
+    public BTree(File fileName)
+    {
+
+        try
+        {
+            accessFile = new RandomAccessFile(fileName, "r");
+        } catch (FileNotFoundException fnfe)
+        {
+            System.err.println("File not found check the name and try again.");
+            System.exit(-1);
+        }
+        readTreeMetadata();
+        root = readNode(offset);
+    }
+
+    public BTree()
+    {
+        super();
+    }
+
+    /**
+     * Finds and returns root of the BTreeNode
+     *
+     * @return root of tree
+     */
+    BTreeNode getRoot()
+    {
+        return root;
+    }
+
+    /**
+     * Inserts into the BTree
+     *
+     * @param key to be inserted
+     */
+    void insert(long key)
+    {
+        BTreeNode rootNode = root;
+        int i = rootNode.getKeyCount();
+        if (i == 2 * degree - 1)
+        {
+            TreeObject Tobj = new TreeObject(key);
+            while (i > 0 && Tobj.compareTo(rootNode.getKey(i - 1)) < 0)
+            {
+                i--;
+            }
+            if (i > 0 && Tobj.compareTo(rootNode.getKey(i - 1)) == 0)
+                rootNode.getKey(i - 1).increaseFrequency();
+            else
+            {
+
+                BTreeNode temp = new BTreeNode();
+                temp.setOffset(rootNode.getOffset());
+                root = temp;
+                rootNode.setOffset(insertionPoint);
+                rootNode.setParent(temp.getOffset());
+                temp.setIsLeaf(false);
+                temp.addChild(rootNode.getOffset());
+                splitChild(temp, 0, rootNode);
+                notFullInsert(temp, key);
+            }
+        } else
+            notFullInsert(rootNode, key);
+    }
+
+    /**
+     * Inserts into the BTree ensuring the btree is not full
+     *
+     * @param key     to be inserted
+     * @param nodeOne the BTreeNode to be inserted
+     */
+    private void notFullInsert(BTreeNode x, long key)
+    {
+        int i = x.getKeyCount();
+
+        TreeObject treeObject = new TreeObject(key);
+
+        if (x.isLeaf())
+        {
+            if (x.getKeyCount() != 0)
+            {
+                while (i > 0 && treeObject.compareTo(x.getKey(i - 1)) < 0)
+                {
+                    i--;
+                }
+            }
+            if (i > 0 && treeObject.compareTo(x.getKey(i - 1)) == 0)
+            {
+                x.getKey(i - 1).increaseFrequency();
+            } else
+            {
+                x.addKey(treeObject, i);
+                x.setKeyCount(x.getKeyCount() + 1);
+            }
+            writeNode(x);
+        } else
+        {
+            while (i > 0 && (treeObject.compareTo(x.getKey(i - 1)) < 0))
+            {
+                i--;
+            }
+            if (i > 0 && treeObject.compareTo(x.getKey(i - 1)) == 0)
+            {
+                x.getKey(i - 1).increaseFrequency();
+                writeNode(x);
+                return;
+            }
+            int offset = x.getChild(i);
+            BTreeNode nodetwo = readNode(offset);
+            if (nodetwo.getKeyCount() == 2 * degree - 1)
+            {
+                int j = nodetwo.getKeyCount();
+                while (j > 0 && treeObject.compareTo(nodetwo.getKey(j - 1)) < 0)
+                {
+                    j--;
+                }
+                if (j > 0 && treeObject.compareTo(nodetwo.getKey(j - 1)) == 0)
+                {
+                    nodetwo.getKey(j - 1).increaseFrequency();
+                    writeNode(nodetwo);
+                    return;
+                } else
+                {
+                    splitChild(x, i, nodetwo);
+                    if (treeObject.compareTo(x.getKey(i)) > 0)
+                    {
+                        i++;
+                    }
+                }
+            }
+            offset = x.getChild(i);
+            BTreeNode child = readNode(offset);
+            notFullInsert(child, key);
+        }
+    }
+
+    /**
+     * Splits child node
+     *
+     * @param nodeOne the btree Node to be split
+     * @param y       the node that will be split
+     * @param i       the degree index
+     */
+    private void splitChild(BTreeNode x, int i, BTreeNode y)
+    {
+        BTreeNode z = new BTreeNode();
+        z.setIsLeaf(y.isLeaf());
+        z.setParent(y.getParent());
+
+        for (int j = 0; j < degree - 1; j++)
+        {
+            z.addKey(y.removeKey(degree));
+            z.setKeyCount(z.getKeyCount() + 1);
+            y.setKeyCount(y.getKeyCount() - 1);
+
+        }
+        if (!y.isLeaf())
+        {
+            for (int j = 0; j < degree; j++)
+            {
+                z.addChild(y.removeChild(degree));
+            }
+        }
+        x.addKey(y.removeKey(degree - 1), i);
+        x.setKeyCount(x.getKeyCount() + 1);
+        y.setKeyCount(y.getKeyCount() - 1);
+        if (x == root && x.getKeyCount() == 1)
+        {
+            writeNode(y);
+            insertionPoint += nodeSize;
+            z.setOffset(insertionPoint);
+            x.addChild(z.getOffset(), i + 1);
+            writeNode(z);
+            writeNode(x);
+            insertionPoint += nodeSize;
+        } else
+        {
+            writeNode(y);
+            z.setOffset(insertionPoint);
+            writeNode(z);
+            x.addChild(z.getOffset(), i + 1);
+            writeNode(x);
+            insertionPoint += nodeSize;
+        }
+    }
+
+    /**
+     * Search the BTree
+     *
+     * @param key     to be inserted
+     * @param nodeOne the node to be found
+     */
+    TreeObject search(BTreeNode x, long key)
+    {
+        int i = 0;
+        TreeObject obj = new TreeObject(key);
+        while (i < x.getKeyCount() && (obj.compareTo(x.getKey(i))
+                > 0))
+        {
+            i++;
+
+        }
+        if (i < x.getKeyCount() && obj.compareTo(x.getKey(i)) == 0)
+
+        {
+            return x.getKey(i);
+
+        }
+        if (x.isLeaf())
+
+        {
+            return null;
+        } else
+        {
+            int offset = x.getChild(i);
+
+            BTreeNode nextNode = readNode(offset);
+
+            return search(nextNode, key);
+        }
+    }
+
+    /**
+     * Prints to file, instantiating a printWriter
+     *
+     * @param node           the node to be printed
+     * @param writer         the setup instantiation of PrintWriter
+     * @param sequenceLength how long each DNA sequence should be
+     */
+    void printToFile(BTreeNode node, PrintWriter writer, int sequenceLength)
+    {
+        GBFileConvert parser = new GBFileConvert();
+
+        if (node.isLeaf())
+        {
+            for (int i = 0; i < node.getKeyCount(); i++)
+            {
+                writer.print(parser.convertLongToString(node.getKey(i)
+                        .getData(), sequenceLength) + ": ");
+                writer.println(node.getKey(i).getFrequency());
+            }
+        }
+        if (!node.isLeaf())
+        {
+            for (int i = 0; i < node.getKeyCount() + 1; ++i)
+            {
+                int offset = node.getChild(i);
+
+                BTreeNode nodeTwo = readNode(offset);
+                printToFile(nodeTwo, writer, sequenceLength);
+
+                if (i < node.getKeyCount())
+                {
+                    writer.print(parser.convertLongToString(node.getKey(i)
+                            .getData(), sequenceLength) + ": ");
+                    writer.println(node.getKey(i).getFrequency());
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes a node pushed off the cache
+     *
+     * @param n the node toe be written
+     */
+    private void writeNode(BTreeNode n)
+    {
+        if (cache != null)
+        {
+            BTreeNode cacheNode = cache.add(n);
+
+            // if a node was pushed off, write it
+            if (cacheNode != null)
+                writeNodeToFile(cacheNode);
+        } else
+        {
+            writeNodeToFile(n);
+        }
+    }
+
+    /**
+     * Writes a node pushed off the cache
+     *
+     * @param n the node toe be written
+     */
+    private void writeNodeToFile(BTreeNode n)
+    {
+        int i;
+        try
+        {
+            writeNodeMetadata(n, n.getOffset());
+            accessFile.writeInt(n.getParent());
+
+            for (i = 0; i < 2 * degree - 1; i++)
+            {
+                if (i < n.getKeyCount() + 1 && !n.isLeaf())
+                {
+                    accessFile.writeInt(n.getChild(i));
+                } else if (i >= n.getKeyCount() + 1 || n.isLeaf())
+                {
+                    accessFile.writeInt(0);
+                }
+                if (i < n.getKeyCount())
+                {
+                    long data = n.getKey(i).getData();
+                    accessFile.writeLong(data);
+                    int frequency = n.getKey(i).getFrequency();
+                    accessFile.writeInt(frequency);
+                } else if (i >= n.getKeyCount() || n.isLeaf())
+                {
+                    accessFile.writeLong(0);
+                }
+            }
+            if (i == n.getKeyCount() && !n.isLeaf())
+            {
+                accessFile.writeInt(n.getChild(i));
+            }
+        } catch (IOException ioe)
+        {
+            System.err.println("IO Exception occurred!");
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Reads a cached node
+     *
+     * @param offset of the nodes
+     */
+    private BTreeNode readNode(int offset)
+    {
+
+        BTreeNode nodeTwo = null;
+
+        // if node is cached, we can just read it from there
+        if (cache != null) nodeTwo = cache.readNode(offset);
+        if (nodeTwo != null) return nodeTwo;
+
+        nodeTwo = new BTreeNode();
+        TreeObject treeObj;
+        nodeTwo.setOffset(offset);
+
+        int k;
+        try
+        {
+            accessFile.seek(offset);
+            boolean isLeaf = accessFile.readBoolean();
+            nodeTwo.setIsLeaf(isLeaf);
+            int n = accessFile.readInt();
+            nodeTwo.setKeyCount(n);
+            int parent = accessFile.readInt();
+            nodeTwo.setParent(parent);
+            for (k = 0; k < 2 * degree - 1; k++)
+            {
+                if (k < nodeTwo.getKeyCount() + 1 && !nodeTwo.isLeaf())
+                {
+                    int child = accessFile.readInt();
+                    nodeTwo.addChild(child);
+                } else if (k >= nodeTwo.getKeyCount() + 1 || nodeTwo.isLeaf())
+                {
+                    accessFile.seek(accessFile.getFilePointer() + 4);
+                }
+                if (k < nodeTwo.getKeyCount())
+                {
+                    long value = accessFile.readLong();
+                    int frequency = accessFile.readInt();
+                    treeObj = new TreeObject(value, frequency);
+                    nodeTwo.addKey(treeObj);
+                }
+            }
+            if (k == nodeTwo.getKeyCount() && !nodeTwo.isLeaf())
+            {
+                int child = accessFile.readInt();
+                nodeTwo.addChild(child);
+            }
+        } catch (IOException ioe)
+        {
+            System.err.println(ioe.getMessage());
+            System.exit(-1);
+        }
+
+        return nodeTwo;
+    }
+
+    /**
+     * Writes the metadata of the tree, including the degree ect.
+     */
+    private void writeTreeMetadata()
+    {
+        try
+        {
+            accessFile.seek(0);
+            accessFile.writeInt(degree);
+            accessFile.writeInt(32 * degree - 3);
+            accessFile.writeInt(12);
+        } catch (IOException ioe)
+        {
+            System.err.println("IO Exception occurred!");
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Reads the meta data from file
+     */
+    private void readTreeMetadata()
+    {
+        try
+        {
+            accessFile.seek(0);
+            degree = accessFile.readInt();
+            nodeSize = accessFile.readInt();
+            offset = accessFile.readInt();
+        } catch (IOException ioe)
+        {
+            System.err.println("IO Exception occurred!");
+            System.exit(-1);
+        }
+    }
+
+    private void writeNodeMetadata(BTreeNode nodeOne, int offset)
+    {
+        try
+        {
+            accessFile.seek(offset);
+            accessFile.writeBoolean(nodeOne.isLeaf());
+            accessFile.writeInt(nodeOne.getKeyCount());
+        } catch (IOException ioe)
+        {
+            System.err.println("IO Exception occurred!");
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Simple cache clearing
+     */
+    void clearCache()
+    {
+        if (cache != null)
+        {
+            for (BTreeNode cnode : cache)
+                writeNodeToFile(cnode);
+        }
+    }
+
+ 
 }
